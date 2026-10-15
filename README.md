@@ -21,8 +21,8 @@ Pegue o `alm_loadscreen-<versão>.zip` na página de [Releases](https://github.c
 ## Funciona com
 | Base | Quem fecha a tela | Situação |
 |---|---|---|
-| QBCore | o próprio QBCore, ao abrir a escolha de personagem | aguardando teste |
-| Sem framework (`standalone`) | este resource, quando o jogador aparece no mapa | aguardando teste |
+| QBCore | o próprio QBCore, ao abrir a escolha de personagem | testado no QBCore da receita do txAdmin (qb-core 1.3.0) |
+| Sem framework (`standalone`) | este resource, quando o jogador aparece no mapa | sem teste ainda |
 
 Nos dois casos, se nada fechar a tela, ela fecha sozinha depois de `Config.MaxSeconds`. Se a sua base fecha a tela por conta própria, faça `Bridge.ClosesLoadscreen` devolver `true` em `bridge/client/standalone.lua`.
 
@@ -30,6 +30,8 @@ Nos dois casos, se nada fechar a tela, ela fecha sozinha depois de `Config.MaxSe
 - `config.lua`: nome do servidor, logo, fundo, partes ligadas, tempo das dicas, músicas, volume inicial, tempo-limite e cores.
 - `locales/pt-br.lua` e `locales/en.lua`: todos os textos da tela, **inclusive as teclas, as novidades e as dicas**. Escolha o idioma em `Config.Locale` e edite o arquivo dele.
 - Imagens vão em `html/img` e músicas em `html/music`; cada pasta tem um `LEIAME.txt` explicando.
+
+Imagem de fundo, por exemplo: coloque `fundo.jpg` em `html/img` e, no `config.lua`, `Config.Background = 'img/fundo.jpg'`. A logo é igual, em `Config.Logo`. Sem imagem, o fundo é um degradê nas cores do tema.
 
 Só use imagem e música suas ou com licença para isso. A licença da Cfx proíbe música licenciada em servidores de FiveM.
 
