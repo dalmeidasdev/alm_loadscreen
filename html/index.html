@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+        <link rel="stylesheet" href="style.css" />
+        <script src="app.js" defer></script>
+    </head>
+    <body>
+        <div id="backdrop" class="backdrop"></div>
+        <canvas id="sparks" class="sparks"></canvas>
+        <div class="shade"></div>
+
+        <header class="top">
+            <div class="brand">
+                <img id="brand-logo" class="hidden" alt="" />
+                <div>
+                    <b id="brand-name" class="display"></b>
+                    <span class="label" data-text="subtitle"></span>
+                </div>
+            </div>
+            <div id="clock-box" class="clock" data-part="clock">
+                <b id="clock" class="display"></b>
+                <span id="date" class="label"></span>
+            </div>
+        </header>
+
+        <aside class="side">
+            <section class="card" data-part="keys">
+                <h2 class="label" data-text="keys_title"></h2>
+                <ul id="keys" class="keys"></ul>
+            </section>
+            <section class="card" data-part="news">
+                <h2 class="label" data-text="news_title"></h2>
+                <ul id="news" class="news"></ul>
+            </section>
+        </aside>
+
+        <main class="center">
+            <img id="emblem" class="emblem hidden" alt="" />
+            <b id="center-name" class="center-name display hidden"></b>
+            <p class="tagline display" data-text="tagline"></p>
+        </main>
+
+        <footer class="bottom">
+            <section id="player" class="player" data-part="music">
+                <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="track-info">
+                    <span class="label" data-text="now_playing"></span>
+                    <b id="track-title"></b>
+                    <small id="track-artist"></small>
+                </div>
+                <div class="controls">
+                    <button id="prev" data-title="previous">
+                        <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z" /></svg>
+                    </button>
+                    <button id="play" class="main" data-title="play">
+                        <svg viewBox="0 0 24 24"><path id="play-icon" d="M7 4v16l13-8z" /></svg>
+                    </button>
+                    <button id="next" data-title="next">
+                        <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z" /></svg>
+                    </button>
+                </div>
+                <div class="volume">
+                    <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Z" /></svg>
+                    <input id="volume" class="range" type="range" min="0" max="100" value="25" />
+                </div>
+                <div class="seek"><i id="seek"></i></div>
+            </section>
+
+            <section class="loading">
+                <p id="tip" class="tip" data-part="tips"></p>
+                <div class="progress-info">
+                    <span id="stage" class="label" data-text="loading"></span>
+                    <span id="percent" class="display">0%</span>
+                </div>
+                <div class="track"><div id="fill" class="fill"></div></div>
+            </section>
+        </footer>
+    </body>
+</html>

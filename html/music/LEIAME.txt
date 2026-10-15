@@ -1,0 +1,6 @@
+Coloque aqui as músicas (.ogg ou .mp3) e liste cada uma em Config.Music, no config.lua:
+  { title = 'Abertura', artist = 'Minha Banda', file = 'music/abertura.ogg' },
+Só use música sua ou com licença para isso: a licença da Cfx proíbe música licenciada.
+
+Put your songs (.ogg or .mp3) here and list each one in Config.Music, in config.lua (see above).
+Only use music you own or are licensed to use: the Cfx license forbids licensed music.

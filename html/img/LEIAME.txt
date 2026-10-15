@@ -1,0 +1,7 @@
+Coloque aqui a logo e o fundo do seu servidor e aponte no config.lua, por exemplo:
+  Config.Logo = 'img/logo.png'
+  Config.Background = 'img/fundo.jpg'
+Use só imagem sua ou de licença livre.
+
+Put your server logo and background here and point to them in config.lua (see above).
+Only use images you own or with a free license.
