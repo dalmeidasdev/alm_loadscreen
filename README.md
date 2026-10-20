@@ -38,7 +38,7 @@ Só use imagem e música suas ou com licença para isso. A licença da Cfx proí
 Prefira arquivo local a endereço `https`: um endereço de fora é baixado pelo computador de cada jogador, e o dono daquele site vê o IP de quem entra.
 
 ## Como funciona
-A tela abre antes de qualquer script do jogador. Por isso o servidor manda os textos, as cores e a lista de músicas junto com a conexão (`deferrals.handover`), e a página lê esses dados ao abrir. Mudou o `config.lua` ou um locale? Reinicie o resource (`ensure alm_loadscreen`): quem entrar depois já vê a mudança.
+A tela abre antes de qualquer script do jogador. Por isso o servidor manda os textos, as cores e a lista de músicas junto com a conexão (`deferrals.handover`), e a página lê esses dados ao abrir. Em algumas versões do FiveM esses dados chegam vazios; de reserva, o script do cliente manda os mesmos dados assim que começa, e a tela se completa alguns segundos depois. Mudou o `config.lua` ou um locale? Reinicie o resource (`ensure alm_loadscreen`): quem entrar depois já vê a mudança.
 
 ## Código aberto
 Todo o código deste repositório é aberto para leitura. Para ajustar a tela ao seu servidor você só precisa mexer em `config.lua`, `locales/` e `bridge/`.

@@ -1,5 +1,9 @@
 Locales['pt-br'] = {
     update_available = 'Versão nova disponível: %s (instalada: %s).',
+    -- avisos de valor do config.lua que a tela ignorou
+    ignored_image = "%s ignorado: %s. Use um arquivo de html/img (ex.: 'img/logo.png') ou um endereço https://, ou '' para deixar sem.",
+    ignored_music = "Config.Music, música %s ignorada: arquivo %s. Use um arquivo de html/music (ex.: file = 'music/abertura.ogg') ou um endereço https://.",
+    ignored_music_list = "Config.Music ignorado (%s). Use uma lista: Config.Music = { { title = 'Abertura', artist = 'Minha Banda', file = 'music/abertura.ogg' } }.",
 
     ui = {
         lang = 'pt-BR',        -- formato da hora e da data

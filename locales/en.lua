@@ -1,5 +1,9 @@
 Locales['en'] = {
     update_available = 'New version available: %s (installed: %s).',
+    -- warnings about config.lua values the screen ignored
+    ignored_image = "%s ignored: %s. Use a file from html/img (e.g. 'img/logo.png') or an https:// address, or '' to leave it empty.",
+    ignored_music = "Config.Music, track %s ignored: file %s. Use a file from html/music (e.g. file = 'music/intro.ogg') or an https:// address.",
+    ignored_music_list = "Config.Music ignored (%s). Use a list: Config.Music = { { title = 'Intro', artist = 'My Band', file = 'music/intro.ogg' } }.",
 
     ui = {
         lang = 'en-US',        -- time and date format

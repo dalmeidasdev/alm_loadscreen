@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Almeida Scripts'
 description 'Tela de carregamento com dicas, teclas, novidades, relógio e player de música'
-version '1.0.0'
+version '1.0.1'
 
 -- Sem `dependencies` de framework: a ponte (bridge/) descobre sozinha o que está no servidor.
 
@@ -19,6 +19,7 @@ shared_scripts {
     'shared/locale.lua',
     'locales/*.lua',
     'bridge/shared.lua',
+    'shared/payload.lua',
 }
 
 client_scripts {

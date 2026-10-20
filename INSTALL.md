@@ -24,10 +24,10 @@
 | O que acontece | Causa | Solução |
 |---|---|---|
 | Aparece a tela antiga | A outra tela de carregamento continua ligada | Veja o passo 3: apague a pasta dela ou use `stop <nome>` no `server.cfg`. Nunca tire o `ensure` da pasta inteira |
-| A tela aparece sem textos e sem cores (só a barra) | O lado do servidor do resource não rodou, ou ele foi ligado depois de o jogador conectar | Confira erros no console do servidor; reinicie o resource e reconecte |
+| A tela abre sem textos (só fundo, relógio e barra) | Em algumas versões do FiveM os dados da conexão chegam vazios à página. Desde a 1.0.1 o script do cliente manda os textos de novo, e eles aparecem alguns segundos depois | Use a 1.0.1 ou mais nova. Se nunca aparecem: confira erros no console do servidor e no F8, reinicie o resource e reconecte |
 | A tela fica parada até o tempo-limite | Nada fechou a tela | No QBCore, confira se o `qb-multicharacter` está ligado. Em outra base, veja "Funciona com" no README |
 | A tela some cedo demais, com o mapa ainda carregando | A sua base faz o jogador aparecer antes de terminar | Faça `Bridge.ClosesLoadscreen` devolver `true` em `bridge/client/standalone.lua` e deixe a base fechar a tela |
-| A música não toca | Arquivo fora de `html/music`, nome diferente do listado, ou formato que o jogo não abre | Use `.ogg` ou `.mp3`, confira o nome em `Config.Music` (começando por `music/`) |
-| A logo ou o fundo não aparecem | Caminho errado | Use `'img/arquivo.png'` com o arquivo dentro de `html/img`, ou um endereço `https://` |
+| A música não toca | Arquivo fora de `html/music`, nome diferente do listado, ou formato que o jogo não abre | Use `.ogg` ou `.mp3`, confira o nome em `Config.Music` (começando por `music/`). Caminho errado aparece num aviso amarelo no console do servidor ao iniciar |
+| A logo ou o fundo não aparecem | Caminho errado (aparece num aviso no console do servidor ao iniciar) | Use `'img/arquivo.png'` com o arquivo dentro de `html/img`, ou um endereço `https://` |
 | As cores não mudam | Cor fora do formato | Use sempre `'#rrggbb'`, com seis dígitos |
 | Mudei o config e nada mudou | A tela lê os dados na conexão | Reinicie o resource e reconecte |

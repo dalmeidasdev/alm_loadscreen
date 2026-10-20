@@ -37,6 +37,7 @@ Config.TipSeconds = 7
 -- Lista vazia: toca um som ambiente gerado pela própria tela.
 -- Só use música sua ou com licença para isso: a licença da Cfx proíbe música licenciada.
 -- Exemplo: { title = 'Abertura', artist = 'Minha Banda', file = 'music/abertura.ogg' },
+-- Caminho errado é ignorado, com aviso no console do servidor ao iniciar.
 Config.Music = {}
 
 -- Volume inicial, de 0 a 100. O jogador pode mudar, e a escolha fica salva no computador dele.

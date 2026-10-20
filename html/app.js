@@ -1,12 +1,11 @@
 // A tela de carregamento abre antes de qualquer script do cliente. Textos, cores e músicas vêm
 // do servidor junto com a conexão (server/main.lua) em window.nuiHandoverData.almLoadscreen.
+// Em algumas versões do FiveM esses dados chegam vazios ou tarde: a página confere de novo por
+// alguns segundos e aceita também a reserva que o cliente manda (client/main.lua). Vale o
+// primeiro que chegar, uma vez só. Até lá a tela mostra só o fundo, o relógio e a barra.
 // A página só desenha: o código é aberto e nada aqui vale como regra.
 
 const $ = (selector) => document.querySelector(selector);
-
-const boot = (window.nuiHandoverData && window.nuiHandoverData.almLoadscreen) || {};
-const ui = boot.locale || {};
-const show = boot.show || {};
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const THEME_KEYS = ["accent", "background", "surface", "line", "text", "muted"];
@@ -14,6 +13,9 @@ const RGB_KEYS = ["accent", "background", "surface"];
 // imagem ou música: arquivo do próprio resource ou endereço https, sem nada que quebre o CSS
 const LOCAL_FILE = (folder) => new RegExp(`^${folder}/[\\w\\-./ ]+$`);
 const REMOTE_FILE = /^https:\/\/[^\s"'()\\<>]+$/;
+// por quanto tempo a página volta a olhar window.nuiHandoverData, e de quanto em quanto
+const HANDOVER_WAIT = 15000;
+const HANDOVER_STEP = 250;
 
 function safeUrl(value, folder) {
     if (typeof value !== "string" || value === "" || value.includes("..")) return null;
@@ -21,15 +23,22 @@ function safeUrl(value, folder) {
     return null;
 }
 
-const text = (key) => (typeof ui[key] === "string" ? ui[key] : "");
+const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const list = (value) => (Array.isArray(value) ? value : []);
+
+// preenchidos por apply(), com os dados que chegarem primeiro
+let applied = false;
+let ui = {};
+let show = {};
+
+const text = (key) => (typeof ui[key] === "string" ? ui[key] : "");
 const enabled = (part) => show[part] !== false;
 
-// ───────── tema, textos e partes ligadas no config ─────────
+// ───────── tema ─────────
 
-(function applyTheme(theme = boot.theme || {}) {
+function applyTheme(theme) {
     const root = document.documentElement.style;
-    for (const [key, value] of Object.entries(theme)) {
+    for (const [key, value] of Object.entries(isObject(theme) ? theme : {})) {
         if (!THEME_KEYS.includes(key) || typeof value !== "string" || !HEX.test(value)) continue;
         root.setProperty(`--${key}`, value);
         if (RGB_KEYS.includes(key)) {
@@ -37,35 +46,12 @@ const enabled = (part) => show[part] !== false;
             root.setProperty(`--${key}-rgb`, `${n >> 16}, ${(n >> 8) & 255}, ${n & 255}`);
         }
     }
-})();
-
-for (const el of document.querySelectorAll("[data-text]")) el.textContent = text(el.dataset.text);
-for (const el of document.querySelectorAll("[data-title]")) el.title = text(el.dataset.title);
-for (const el of document.querySelectorAll("[data-part]")) el.classList.toggle("hidden", !enabled(el.dataset.part));
-if (text("lang")) document.documentElement.lang = text("lang");
-
-const serverName = typeof boot.serverName === "string" ? boot.serverName : "";
-document.title = serverName;
-$("#brand-name").textContent = serverName;
-
-const logo = safeUrl(boot.logo, "img");
-if (logo) {
-    for (const img of [$("#brand-logo"), $("#emblem")]) {
-        img.src = logo;
-        img.classList.remove("hidden");
-        img.addEventListener("error", () => img.classList.add("hidden"));
-    }
-} else if (serverName) {
-    $("#center-name").textContent = serverName;
-    $("#center-name").classList.remove("hidden");
 }
-
-const background = safeUrl(boot.background, "img");
-if (background) $("#backdrop").style.backgroundImage = `url("${background}")`;
 
 // ───────── progresso ─────────
 
 let progress = 0;
+let stage = null;
 
 function setProgress(fraction) {
     // o jogo às vezes manda valores fora de ordem; a barra nunca volta
@@ -74,102 +60,98 @@ function setProgress(fraction) {
     $("#percent").textContent = `${Math.round(progress * 100)}%`;
 }
 
-const stages = ui.stages || {};
+// a etapa pode chegar antes dos textos: guarda e mostra quando eles chegarem
+function renderStage() {
+    const stages = isObject(ui.stages) ? ui.stages : {};
+    if (typeof stages[stage] === "string") $("#stage").textContent = stages[stage];
+}
+
 const handlers = {
     loadProgress: (data) => setProgress(data.loadFraction),
     startInitFunctionOrder: (data) => {
-        if (typeof stages[data.type] === "string") $("#stage").textContent = stages[data.type];
+        stage = data.type;
+        renderStage();
     },
+    almLoadscreen: (data) => apply(data.data),
 };
 
-window.addEventListener("message", (event) => {
-    const handler = handlers[event.data && event.data.eventName];
-    if (handler) handler(event.data);
-});
-
-// ───────── cartões e dicas ─────────
-
-function fillCard(selector, part, rows, build) {
-    const items = rows.filter((row) => row !== null);
-    const card = $(selector).closest(".card");
-    if (!items.length) {
-        card.classList.add("hidden");
-        return;
+// defensivo: se o FiveM passar a reenviar o handover por mensagem, aceita o pedaço deste resource
+function handoverIn(message) {
+    for (const blob of [message, message.data, message.handoverData]) {
+        if (isObject(blob) && isObject(blob.almLoadscreen)) return blob.almLoadscreen;
     }
-    for (const row of items) $(selector).appendChild(build(row));
-    card.classList.toggle("hidden", !enabled(part));
+    return null;
 }
 
-fillCard(
-    "#keys",
-    "keys",
-    list(ui.keys).map((row) => (Array.isArray(row) && row.length >= 2 ? [String(row[0]), String(row[1])] : null)),
-    ([key, label]) => {
-        const item = document.createElement("li");
-        const cap = document.createElement("span");
-        cap.className = "key";
-        cap.textContent = key;
-        item.append(cap, document.createTextNode(label));
-        return item;
-    },
-);
-
-fillCard(
-    "#news",
-    "news",
-    list(ui.news).map((row) => (typeof row === "string" ? row : null)),
-    (row) => {
-        const item = document.createElement("li");
-        item.textContent = row;
-        return item;
-    },
-);
-
-(function tips() {
-    const rows = list(ui.tips).filter((row) => typeof row === "string");
-    if (!enabled("tips") || !rows.length) return;
-    const tip = $("#tip");
-    let index = Math.floor(Math.random() * rows.length);
-
-    function next() {
-        tip.classList.remove("show");
-        setTimeout(() => {
-            tip.textContent = rows[index % rows.length];
-            index += 1;
-            tip.classList.add("show");
-        }, 350);
+window.addEventListener("message", (event) => {
+    let message = event.data;
+    if (typeof message === "string") {
+        try {
+            message = JSON.parse(message);
+        } catch (error) {
+            return;
+        }
     }
-    next();
-    if (rows.length > 1) setInterval(next, Math.max(3, Number(boot.tipSeconds) || 7) * 1000);
-})();
+    if (!isObject(message)) return;
+    const handler = handlers[message.eventName];
+    if (handler) handler(message);
+    else if (!applied) apply(handoverIn(message));
+});
 
-(function clock() {
-    if (!enabled("clock")) return;
-    const lang = text("lang") || undefined;
+// ───────── relógio ─────────
+
+const clock = (function () {
+    let lang;
+    let timer = null;
+
+    function format(now, method, options) {
+        try {
+            return now[method](lang, options);
+        } catch (error) {
+            // idioma que o navegador não conhece: usa o do computador
+            return now[method](undefined, options);
+        }
+    }
 
     function tick() {
         const now = new Date();
-        $("#clock").textContent = now.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
-        $("#date").textContent = now.toLocaleDateString(lang, { weekday: "long", day: "2-digit", month: "long" });
+        $("#clock").textContent = format(now, "toLocaleTimeString", { hour: "2-digit", minute: "2-digit" });
+        $("#date").textContent = format(now, "toLocaleDateString", { weekday: "long", day: "2-digit", month: "long" });
     }
-    tick();
-    setInterval(tick, 15000);
+
+    function start() {
+        tick();
+        if (!timer) timer = setInterval(tick, 15000);
+    }
+
+    start();
+    return {
+        // chamado uma vez, quando os dados chegam: idioma do locale, ou desligado no config
+        configure(newLang, on) {
+            lang = newLang || undefined;
+            if (on) return start();
+            clearInterval(timer);
+            timer = null;
+        },
+    };
 })();
 
 // ───────── brilhos subindo ─────────
 
-(function sparks() {
+const sparks = (function () {
     const canvas = $("#sparks");
-    if (!enabled("sparks")) {
-        canvas.classList.add("hidden");
-        return;
-    }
     const ctx = canvas.getContext("2d");
-    const styles = getComputedStyle(document.documentElement);
-    const colors = [styles.getPropertyValue("--accent").trim(), styles.getPropertyValue("--text").trim()];
+    let colors = [];
     let width = 0;
     let height = 0;
+    let running = true;
     const dots = [];
+
+    function readColors() {
+        const styles = getComputedStyle(document.documentElement);
+        colors = [styles.getPropertyValue("--accent").trim(), styles.getPropertyValue("--text").trim()];
+    }
+    readColors();
 
     function resize() {
         width = canvas.width = window.innerWidth;
@@ -195,6 +177,7 @@ fillCard(
 
     // ~30 quadros por segundo bastam para brilhos lentos e deixam a placa de vídeo para o jogo
     function frame(time) {
+        if (!running) return;
         requestAnimationFrame(frame);
         if (time - last < 33) return;
         last = time;
@@ -212,15 +195,83 @@ fillCard(
         }
     }
     requestAnimationFrame(frame);
+
+    return {
+        // chamado uma vez, quando os dados chegam: cores do tema, ou desligado no config
+        configure(on) {
+            if (on) return readColors();
+            running = false;
+            window.removeEventListener("resize", resize);
+            canvas.classList.add("hidden");
+        },
+    };
 })();
+
+// ───────── cartões e dicas ─────────
+
+function fillCard(selector, part, rows, build) {
+    const items = rows.filter((row) => row !== null);
+    const card = $(selector).closest(".card");
+    if (!items.length) {
+        card.classList.add("hidden");
+        return;
+    }
+    for (const row of items) $(selector).appendChild(build(row));
+    card.classList.toggle("hidden", !enabled(part));
+}
+
+function fillCards() {
+    fillCard(
+        "#keys",
+        "keys",
+        list(ui.keys).map((row) => (Array.isArray(row) && row.length >= 2 ? [String(row[0]), String(row[1])] : null)),
+        ([key, label]) => {
+            const item = document.createElement("li");
+            const cap = document.createElement("span");
+            cap.className = "key";
+            cap.textContent = key;
+            item.append(cap, document.createTextNode(label));
+            return item;
+        },
+    );
+
+    fillCard(
+        "#news",
+        "news",
+        list(ui.news).map((row) => (typeof row === "string" ? row : null)),
+        (row) => {
+            const item = document.createElement("li");
+            item.textContent = row;
+            return item;
+        },
+    );
+}
+
+function startTips(seconds) {
+    const rows = list(ui.tips).filter((row) => typeof row === "string");
+    if (!enabled("tips") || !rows.length) return;
+    const tip = $("#tip");
+    let index = Math.floor(Math.random() * rows.length);
+
+    function next() {
+        tip.classList.remove("show");
+        setTimeout(() => {
+            tip.textContent = rows[index % rows.length];
+            index += 1;
+            tip.classList.add("show");
+        }, 350);
+    }
+    next();
+    if (rows.length > 1) setInterval(next, Math.max(3, Number(seconds) || 7) * 1000);
+}
 
 // ───────── player de música ─────────
 
-(function player() {
+function startPlayer(data) {
     if (!enabled("music")) return;
 
-    const playlist = list(boot.music)
-        .map((track) => (track && safeUrl(track.file, "music") ? track : null))
+    const playlist = list(data.music)
+        .map((track) => (isObject(track) && safeUrl(track.file, "music") ? track : null))
         .filter((track) => track !== null);
     const audio = new Audio();
     const ICON_PLAY = "M7 4v16l13-8z";
@@ -238,7 +289,7 @@ fillCard(
         } catch (error) {
             // sem armazenamento: usa o padrão
         }
-        const initial = Number(boot.volume);
+        const initial = Number(data.volume);
         return Number.isFinite(initial) ? initial : 25;
     }
 
@@ -385,4 +436,62 @@ fillCard(
     if (playlist.length < 2) $("#player").classList.add("single");
     render();
     start();
-})();
+}
+
+// ───────── dados: aplicados uma vez só ─────────
+
+// true se aplicou agora; false se já tinha aplicado ou se o que chegou não serve
+function apply(data) {
+    if (applied || !isObject(data) || !isObject(data.locale)) return false;
+    applied = true;
+    ui = data.locale;
+    show = isObject(data.show) ? data.show : {};
+
+    applyTheme(data.theme);
+    for (const el of document.querySelectorAll("[data-text]")) el.textContent = text(el.dataset.text);
+    for (const el of document.querySelectorAll("[data-title]")) el.title = text(el.dataset.title);
+    for (const el of document.querySelectorAll("[data-part]")) el.classList.toggle("hidden", !enabled(el.dataset.part));
+    if (text("lang")) document.documentElement.lang = text("lang");
+    renderStage();
+
+    const serverName = typeof data.serverName === "string" ? data.serverName : "";
+    document.title = serverName;
+    $("#brand-name").textContent = serverName;
+
+    const logo = safeUrl(data.logo, "img");
+    if (logo) {
+        for (const img of [$("#brand-logo"), $("#emblem")]) {
+            img.addEventListener("error", () => img.classList.add("hidden"));
+            img.src = logo;
+            img.classList.remove("hidden");
+        }
+    } else if (serverName) {
+        $("#center-name").textContent = serverName;
+        $("#center-name").classList.remove("hidden");
+    }
+
+    const background = safeUrl(data.background, "img");
+    if (background) $("#backdrop").style.backgroundImage = `url("${background}")`;
+
+    clock.configure(text("lang"), enabled("clock"));
+    sparks.configure(enabled("sparks"));
+    fillCards();
+    startTips(data.tipSeconds);
+    startPlayer(data);
+    return true;
+}
+
+// ───────── fontes dos dados ─────────
+
+function fromHandover() {
+    const handover = window.nuiHandoverData;
+    return isObject(handover) ? handover.almLoadscreen : null;
+}
+
+if (!apply(fromHandover())) {
+    // o handover pode chegar depois de a página abrir: olha de novo por um tempo
+    const since = Date.now();
+    const poll = setInterval(() => {
+        if (applied || apply(fromHandover()) || Date.now() - since >= HANDOVER_WAIT) clearInterval(poll);
+    }, HANDOVER_STEP);
+}
